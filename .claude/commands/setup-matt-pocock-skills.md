@@ -108,11 +108,11 @@ The block:
 
 Then write the three docs files using the seed templates in this skill folder as a starting point:
 
-- [issue-tracker-github.md](./issue-tracker-github.md) — GitHub issue tracker
-- [issue-tracker-gitlab.md](./issue-tracker-gitlab.md) — GitLab issue tracker
-- [issue-tracker-local.md](./issue-tracker-local.md) — local-markdown issue tracker
-- [triage-labels.md](./triage-labels.md) — label mapping
-- [domain.md](./domain.md) — domain doc consumer rules + layout
+- [issue-tracker-github.md](./setup-matt-pocock-skills/issue-tracker-github.md) — GitHub issue tracker
+- [issue-tracker-gitlab.md](./setup-matt-pocock-skills/issue-tracker-gitlab.md) — GitLab issue tracker
+- [issue-tracker-local.md](./setup-matt-pocock-skills/issue-tracker-local.md) — local-markdown issue tracker
+- [triage-labels.md](./setup-matt-pocock-skills/triage-labels.md) — label mapping
+- [domain.md](./setup-matt-pocock-skills/domain.md) — domain doc consumer rules + layout
 
 For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch using the user's description.
 
