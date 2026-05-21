@@ -71,3 +71,17 @@ Interactive docs: `http://localhost:8000/docs`
 - `get_db()` ใน `database.py` เป็น FastAPI dependency ที่ inject SQLAlchemy session เข้า route
 - Schemas แยกเป็น `Create`, `Update`, `Response` เพื่อควบคุม input/output แต่ละ operation
 - `TodoUpdate` ใช้ fields เป็น `Optional` ทั้งหมดเพื่อรองรับ partial update (PATCH)
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues (`khthana/todo-app`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default label vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
