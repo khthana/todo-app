@@ -1,4 +1,35 @@
+from __future__ import annotations
+
+from datetime import datetime
+
 from pydantic import BaseModel
+
+
+class StandardTaskCreate(BaseModel):
+    type: str = "standard"
+    title: str
+    description: str = ""
+
+
+class StandardTaskUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+
+
+class TaskTransitionRequest(BaseModel):
+    to_status: str
+
+
+class TaskResponse(BaseModel):
+    id: int
+    type: str
+    title: str
+    description: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
 class TodoBase(BaseModel):
