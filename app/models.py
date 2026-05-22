@@ -23,6 +23,8 @@ class Task(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=False, default="")
     status = Column(String(20), nullable=False, default="pending")
+    due_date = Column(DateTime, nullable=True)
+    reminder_time = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -31,8 +33,24 @@ class Task(Base):
         "polymorphic_identity": "task",
     }
 
+    @property
+    def is_overdue(self) -> bool | None:
+        return None
+
 
 class StandardTask(Task):
     __mapper_args__ = {
         "polymorphic_identity": "standard",
     }
+
+
+class DeadlineTask(Task):
+    __mapper_args__ = {
+        "polymorphic_identity": "deadline",
+    }
+
+    @property
+    def is_overdue(self) -> bool:
+        if self.due_date is None:
+            return False
+        return self.due_date < datetime.utcnow()

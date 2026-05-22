@@ -16,7 +16,14 @@ def _service(db: Session = Depends(get_db)) -> TaskService:
 
 
 @router.post("/", response_model=schemas.TaskResponse, status_code=201)
-def create_task(payload: schemas.StandardTaskCreate, svc: TaskService = Depends(_service)):
+def create_task(payload: schemas.TaskCreate, svc: TaskService = Depends(_service)):
+    if isinstance(payload, schemas.DeadlineTaskCreate):
+        return svc.create_deadline_task(
+            title=payload.title,
+            description=payload.description,
+            due_date=payload.due_date,
+            reminder_time=payload.reminder_time,
+        )
     return svc.create_task(title=payload.title, description=payload.description)
 
 
@@ -31,7 +38,7 @@ def get_task(task_id: int, svc: TaskService = Depends(_service)):
 
 
 @router.patch("/{task_id}", response_model=schemas.TaskResponse)
-def update_task(task_id: int, payload: schemas.StandardTaskUpdate, svc: TaskService = Depends(_service)):
+def update_task(task_id: int, payload: schemas.TaskUpdate, svc: TaskService = Depends(_service)):
     fields = payload.model_dump(exclude_unset=True)
     return svc.update_task(task_id, fields)
 

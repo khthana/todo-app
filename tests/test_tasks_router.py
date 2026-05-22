@@ -84,6 +84,56 @@ def test_patch_task_performs_partial_update(client):
     assert data["description"] == "Keep"
 
 
+# B24
+def test_overdue_deadline_task_can_transition_to_completed(client):
+    created = client.post("/tasks/", json={"type": "deadline", "title": "Overdue but doable", "due_date": "2000-01-01T00:00:00"}).json()
+    client.post(f"/tasks/{created['id']}/transition", json={"to_status": "in_progress"})
+    resp = client.post(f"/tasks/{created['id']}/transition", json={"to_status": "completed"})
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "completed"
+
+
+# B23
+def test_patch_deadline_task_updates_due_date(client):
+    created = client.post("/tasks/", json={"type": "deadline", "title": "Reschedule me", "due_date": "2030-01-01T00:00:00"}).json()
+    resp = client.patch(f"/tasks/{created['id']}", json={"due_date": "2031-12-31T00:00:00"})
+    assert resp.status_code == 200
+    assert resp.json()["due_date"].startswith("2031")
+
+
+# B21
+def test_is_overdue_true_when_due_date_in_past(client):
+    created = client.post("/tasks/", json={"type": "deadline", "title": "Late task", "due_date": "2000-01-01T00:00:00"}).json()
+    resp = client.get(f"/tasks/{created['id']}")
+    assert resp.json()["is_overdue"] is True
+
+
+# B22
+def test_is_overdue_false_when_due_date_in_future(client):
+    created = client.post("/tasks/", json={"type": "deadline", "title": "Future task", "due_date": "2099-01-01T00:00:00"}).json()
+    resp = client.get(f"/tasks/{created['id']}")
+    assert resp.json()["is_overdue"] is False
+
+
+# B20
+def test_get_deadline_task_includes_due_date_and_is_overdue(client):
+    created = client.post("/tasks/", json={"type": "deadline", "title": "File taxes", "due_date": "2030-06-01T00:00:00"}).json()
+    resp = client.get(f"/tasks/{created['id']}")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["due_date"] is not None
+    assert data["is_overdue"] is False
+
+
+# B19
+def test_post_deadline_task_returns_201_with_deadline_type(client):
+    resp = client.post("/tasks/", json={"type": "deadline", "title": "Submit report", "due_date": "2030-01-01T00:00:00"})
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["type"] == "deadline"
+    assert data["title"] == "Submit report"
+
+
 # B14
 def test_delete_task_returns_204(client):
     created = client.post("/tasks/", json={"type": "standard", "title": "Bye"}).json()

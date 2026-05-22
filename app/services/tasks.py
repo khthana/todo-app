@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from app.models import StandardTask, Task
+from datetime import datetime
+
+from app.models import DeadlineTask, StandardTask, Task
 from app.repositories.tasks import TaskRepository
 
 
@@ -24,6 +26,9 @@ class TaskService:
 
     def create_task(self, title: str, description: str = "") -> Task:
         return self.repo.create(StandardTask(title=title, description=description))
+
+    def create_deadline_task(self, title: str, description: str = "", due_date: datetime | None = None, reminder_time: datetime | None = None) -> Task:
+        return self.repo.create(DeadlineTask(title=title, description=description, due_date=due_date, reminder_time=reminder_time))
 
     def get_task(self, task_id: int) -> Task:
         task = self.repo.get(task_id)
