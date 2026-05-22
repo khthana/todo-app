@@ -24,6 +24,14 @@ def create_task(payload: schemas.TaskCreate, svc: TaskService = Depends(_service
             due_date=payload.due_date,
             reminder_time=payload.reminder_time,
         )
+    if isinstance(payload, schemas.RecurringTaskCreate):
+        return svc.create_recurring_task(
+            title=payload.title,
+            description=payload.description,
+            recurrence_pattern=payload.recurrence_pattern,
+            next_occurrence=payload.next_occurrence,
+            end_recurrence_date=payload.end_recurrence_date,
+        )
     return svc.create_task(title=payload.title, description=payload.description)
 
 

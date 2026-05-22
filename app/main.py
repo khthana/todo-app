@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from .database import Base, engine
 from .routers import todos
 from .routers import tasks
-from .services.tasks import InvalidTransitionError, TaskNotFoundError
+from .services.tasks import InvalidRecurrencePatternError, InvalidTransitionError, TaskNotFoundError
 
 Base.metadata.create_all(bind=engine)
 
@@ -22,6 +22,11 @@ def task_not_found_handler(request, exc: TaskNotFoundError):
 @app.exception_handler(InvalidTransitionError)
 def invalid_transition_handler(request, exc: InvalidTransitionError):
     return JSONResponse(status_code=422, content={"detail": "Invalid state transition"})
+
+
+@app.exception_handler(InvalidRecurrencePatternError)
+def invalid_recurrence_pattern_handler(request, exc: InvalidRecurrencePatternError):
+    return JSONResponse(status_code=400, content={"detail": "Invalid recurrence pattern"})
 
 
 @app.get("/")

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from app.models import DeadlineTask, StandardTask, Task
+from app.models import DeadlineTask, RecurringTask, StandardTask, Task
 from app.repositories.tasks import TaskRepository
+from app.services.recurrence import RecurrenceStrategyFactory
 
 
 class TaskNotFoundError(Exception):
@@ -11,6 +12,10 @@ class TaskNotFoundError(Exception):
 
 
 class InvalidTransitionError(Exception):
+    pass
+
+
+class InvalidRecurrencePatternError(Exception):
     pass
 
 
@@ -26,6 +31,19 @@ class TaskService:
 
     def create_task(self, title: str, description: str = "") -> Task:
         return self.repo.create(StandardTask(title=title, description=description))
+
+    def create_recurring_task(self, title: str, description: str = "", recurrence_pattern: str = "", next_occurrence: datetime | None = None, end_recurrence_date: datetime | None = None) -> Task:
+        try:
+            RecurrenceStrategyFactory.get(recurrence_pattern)
+        except KeyError:
+            raise InvalidRecurrencePatternError(recurrence_pattern)
+        return self.repo.create(RecurringTask(
+            title=title,
+            description=description,
+            recurrence_pattern=recurrence_pattern,
+            next_occurrence=next_occurrence,
+            end_recurrence_date=end_recurrence_date,
+        ))
 
     def create_deadline_task(self, title: str, description: str = "", due_date: datetime | None = None, reminder_time: datetime | None = None) -> Task:
         return self.repo.create(DeadlineTask(title=title, description=description, due_date=due_date, reminder_time=reminder_time))

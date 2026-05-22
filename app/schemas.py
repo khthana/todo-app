@@ -20,7 +20,16 @@ class DeadlineTaskCreate(BaseModel):
     reminder_time: datetime | None = None
 
 
-TaskCreate = Annotated[Union[StandardTaskCreate, DeadlineTaskCreate], Field(discriminator="type")]
+class RecurringTaskCreate(BaseModel):
+    type: Literal["recurring"] = "recurring"
+    title: str
+    description: str = ""
+    recurrence_pattern: str
+    next_occurrence: datetime
+    end_recurrence_date: datetime | None = None
+
+
+TaskCreate = Annotated[Union[StandardTaskCreate, DeadlineTaskCreate, RecurringTaskCreate], Field(discriminator="type")]
 
 
 class StandardTaskUpdate(BaseModel):
@@ -48,6 +57,9 @@ class TaskResponse(BaseModel):
     due_date: datetime | None = None
     reminder_time: datetime | None = None
     is_overdue: bool | None = None
+    recurrence_pattern: str | None = None
+    next_occurrence: datetime | None = None
+    end_recurrence_date: datetime | None = None
     created_at: datetime
     updated_at: datetime
 

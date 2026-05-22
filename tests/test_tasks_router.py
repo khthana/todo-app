@@ -125,6 +125,48 @@ def test_get_deadline_task_includes_due_date_and_is_overdue(client):
     assert data["is_overdue"] is False
 
 
+# B26
+def test_get_recurring_task_includes_recurrence_fields(client):
+    created = client.post("/tasks/", json={
+        "type": "recurring",
+        "title": "Weekly review",
+        "recurrence_pattern": "WEEKLY",
+        "next_occurrence": "2030-01-06T09:00:00",
+        "end_recurrence_date": "2030-12-31T00:00:00",
+    }).json()
+    resp = client.get(f"/tasks/{created['id']}")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["recurrence_pattern"] == "WEEKLY"
+    assert data["next_occurrence"] is not None
+    assert data["end_recurrence_date"] is not None
+
+
+# B27
+def test_invalid_recurrence_pattern_returns_400(client):
+    resp = client.post("/tasks/", json={
+        "type": "recurring",
+        "title": "Bad pattern",
+        "recurrence_pattern": "HOURLY",
+        "next_occurrence": "2030-01-01T09:00:00",
+    })
+    assert resp.status_code == 400
+
+
+# B25
+def test_post_recurring_task_returns_201_with_recurring_type(client):
+    resp = client.post("/tasks/", json={
+        "type": "recurring",
+        "title": "Daily standup",
+        "recurrence_pattern": "DAILY",
+        "next_occurrence": "2030-01-01T09:00:00",
+    })
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["type"] == "recurring"
+    assert data["recurrence_pattern"] == "DAILY"
+
+
 # B19
 def test_post_deadline_task_returns_201_with_deadline_type(client):
     resp = client.post("/tasks/", json={"type": "deadline", "title": "Submit report", "due_date": "2030-01-01T00:00:00"})
