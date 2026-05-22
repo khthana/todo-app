@@ -24,12 +24,13 @@ todo-app/
 ├── app/
 │   ├── main.py             ← FastAPI app entry point, exception handlers, creates DB tables
 │   ├── database.py         ← SQLAlchemy engine, SessionLocal, get_db dependency
-│   ├── models.py           ← ORM models (Task STI hierarchy: Task, StandardTask)
+│   ├── models.py           ← ORM models (Task STI: Task, StandardTask, DeadlineTask, RecurringTask)
 │   ├── schemas.py          ← Pydantic request/response schemas
 │   ├── repositories/
 │   │   └── tasks.py        ← TaskRepository — DB access only, no business logic
 │   ├── services/
-│   │   └── tasks.py        ← TaskService — business logic, state transitions, exceptions
+│   │   ├── tasks.py        ← TaskService — business logic, state transitions, exceptions
+│   │   └── recurrence.py   ← RecurrenceStrategy protocol + Daily/Weekly/Monthly + factory
 │   └── routers/
 │       ├── todos.py        ← CRUD endpoints for /todos
 │       └── tasks.py        ← CRUD + transition endpoints for /tasks
@@ -38,6 +39,7 @@ todo-app/
 │   ├── test_task_repository.py
 │   ├── test_task_service.py
 │   ├── test_tasks_router.py
+│   ├── test_recurrence_strategies.py
 │   └── test_todos.py
 ├── docs/
 │   ├── adr/                ← Architecture Decision Records
@@ -71,7 +73,7 @@ uv run uvicorn app.main:app --reload --port 8000
 | GET | `/todos/{id}` | Get a todo by ID |
 | PATCH | `/todos/{id}` | Update a todo |
 | DELETE | `/todos/{id}` | Delete a todo |
-| POST | `/tasks/` | Create a StandardTask (returns 201) |
+| POST | `/tasks/` | Create a task — dispatch on `type`: `standard`, `deadline`, `recurring` (returns 201) |
 | GET | `/tasks/` | List all tasks |
 | GET | `/tasks/{id}` | Get a task by ID (404 if not found) |
 | PATCH | `/tasks/{id}` | Partial update (title, description) |
@@ -92,9 +94,11 @@ Interactive docs: `http://localhost:8000/docs`
 - Schemas แยกเป็น `Create`, `Update`, `Response` เพื่อควบคุม input/output แต่ละ operation
 - `TodoUpdate` / `StandardTaskUpdate` ใช้ fields เป็น `Optional` ทั้งหมดเพื่อรองรับ partial update (PATCH)
 - Task layer ใช้ Repository pattern — `TaskRepository` (DB only) → `TaskService` (business logic) → router
-- `TaskService` raise custom exceptions (`TaskNotFoundError`, `InvalidTransitionError`) ที่ `main.py` map เป็น 404/422
+- `TaskService` raise custom exceptions ที่ `main.py` map เป็น HTTP status: `TaskNotFoundError`→404, `InvalidTransitionError`→422, `InvalidRecurrencePatternError`→400
 - State transitions ถูกควบคุมโดย `_ALLOWED` map ใน `TaskService` — terminal states (COMPLETED, CANCELLED) ออกไม่ได้
 - Task model ใช้ Single Table Inheritance — ดู `docs/adr/0001-single-table-inheritance-for-task-types.md`
+- RecurrenceStrategy pattern ใน `services/recurrence.py` — `DailyStrategy`, `WeeklyStrategy`, `MonthlyStrategy` (clamp end-of-month) + `RecurrenceStrategyFactory`
+- `POST /tasks/` ใช้ Pydantic discriminated union บน `type` field เพื่อ dispatch ไปยัง `create_task`, `create_deadline_task`, หรือ `create_recurring_task`
 
 ## Agent skills
 
