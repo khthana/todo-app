@@ -50,6 +50,25 @@ todo-app/
 └── uv.lock
 ```
 
+## Git Workflow
+
+หลัง slice เสร็จทุกครั้ง ให้ทำตามลำดับนี้เสมอ:
+
+1. **run tests** — `uv run pytest tests/ -q` ต้องผ่านทั้งหมดก่อน
+2. **commit** — ใส่ `Closes #N` ใน commit message เพื่อให้ GitHub ปิด issue อัตโนมัติตอน push
+3. **push** — ทันทีหลัง commit ไม่รอ
+
+```bash
+uv run pytest tests/ -q
+git add <files>
+git commit -m "Implement Slice N: <description>
+
+Closes #N"
+git push
+```
+
+> อย่าใช้ `gh issue close` โดยตรง — ให้ปิดผ่าน `Closes #N` ใน commit message แทน
+
 ## Common Commands
 
 ```bash
