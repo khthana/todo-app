@@ -212,3 +212,77 @@ def test_transition_disallowed_move_returns_422(client):
 def test_transition_unknown_task_returns_404(client):
     resp = client.post("/tasks/999/transition", json={"to_status": "in_progress"})
     assert resp.status_code == 404
+
+
+# --- Dependency endpoints ---
+
+def _std(client, title="T"):
+    return client.post("/tasks/", json={"type": "standard", "title": title}).json()
+
+
+# B28
+def test_post_dependencies_adds_blocker_and_response_includes_blocker_ids(client):
+    task = _std(client, "Dependent")
+    blocker = _std(client, "Blocker")
+    resp = client.post(f"/tasks/{task['id']}/dependencies", json={"blocker_id": blocker["id"]})
+    assert resp.status_code == 200
+    assert blocker["id"] in resp.json()["blocker_ids"]
+
+
+# B29
+def test_delete_dependency_removes_blocker(client):
+    task = _std(client, "Dependent")
+    blocker = _std(client, "Blocker")
+    client.post(f"/tasks/{task['id']}/dependencies", json={"blocker_id": blocker["id"]})
+    resp = client.delete(f"/tasks/{task['id']}/dependencies/{blocker['id']}")
+    assert resp.status_code == 200
+    assert resp.json()["blocker_ids"] == []
+
+
+# B30
+def test_add_dependency_cycle_returns_400(client):
+    a = _std(client, "A")
+    b = _std(client, "B")
+    client.post(f"/tasks/{b['id']}/dependencies", json={"blocker_id": a["id"]})
+    resp = client.post(f"/tasks/{a['id']}/dependencies", json={"blocker_id": b["id"]})
+    assert resp.status_code == 400
+
+
+# B31
+def test_transition_to_completed_with_incomplete_blocker_returns_422(client):
+    blocker = _std(client, "Blocker")
+    task = _std(client, "Dependent")
+    client.post(f"/tasks/{task['id']}/dependencies", json={"blocker_id": blocker["id"]})
+    client.post(f"/tasks/{task['id']}/transition", json={"to_status": "in_progress"})
+    resp = client.post(f"/tasks/{task['id']}/transition", json={"to_status": "completed"})
+    assert resp.status_code == 422
+
+
+# --- Tag endpoints ---
+
+# B32
+def test_post_tasks_with_tags_response_includes_tag_names(client):
+    resp = client.post("/tasks/", json={"type": "standard", "title": "Work item", "tags": ["work", "urgent"]})
+    assert resp.status_code == 201
+    assert set(resp.json()["tag_names"]) == {"work", "urgent"}
+
+
+# B33
+def test_get_tasks_filter_by_tag(client):
+    client.post("/tasks/", json={"type": "standard", "title": "Tagged", "tags": ["work"]})
+    client.post("/tasks/", json={"type": "standard", "title": "Untagged"})
+    resp = client.get("/tasks/?tag=work")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 1
+    assert data[0]["title"] == "Tagged"
+
+
+# B34
+def test_get_tags_returns_all_tags(client):
+    client.post("/tasks/", json={"type": "standard", "title": "A", "tags": ["alpha"]})
+    client.post("/tasks/", json={"type": "standard", "title": "B", "tags": ["beta"]})
+    resp = client.get("/tags/")
+    assert resp.status_code == 200
+    names = {t["name"] for t in resp.json()}
+    assert names == {"alpha", "beta"}

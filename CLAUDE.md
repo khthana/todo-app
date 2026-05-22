@@ -74,11 +74,14 @@ uv run uvicorn app.main:app --reload --port 8000
 | PATCH | `/todos/{id}` | Update a todo |
 | DELETE | `/todos/{id}` | Delete a todo |
 | POST | `/tasks/` | Create a task — dispatch on `type`: `standard`, `deadline`, `recurring` (returns 201) |
-| GET | `/tasks/` | List all tasks |
+| GET | `/tasks/` | List all tasks — optional `?status=` and `?tag=` query filters |
 | GET | `/tasks/{id}` | Get a task by ID (404 if not found) |
 | PATCH | `/tasks/{id}` | Partial update (title, description) |
 | DELETE | `/tasks/{id}` | Delete a task (returns 204) |
 | POST | `/tasks/{id}/transition` | Drive state transition — body: `{ "to_status": "..." }` (422 if disallowed) |
+| POST | `/tasks/{id}/dependencies` | Add a blocker — body: `{ "blocker_id": N }` (400 if cycle) |
+| DELETE | `/tasks/{id}/dependencies/{blocker_id}` | Remove a blocker |
+| GET | `/tags/` | List all tags |
 
 Interactive docs: `http://localhost:8000/docs`
 
@@ -99,6 +102,9 @@ Interactive docs: `http://localhost:8000/docs`
 - Task model ใช้ Single Table Inheritance — ดู `docs/adr/0001-single-table-inheritance-for-task-types.md`
 - RecurrenceStrategy pattern ใน `services/recurrence.py` — `DailyStrategy`, `WeeklyStrategy`, `MonthlyStrategy` (clamp end-of-month) + `RecurrenceStrategyFactory`
 - `POST /tasks/` ใช้ Pydantic discriminated union บน `type` field เพื่อ dispatch ไปยัง `create_task`, `create_deadline_task`, หรือ `create_recurring_task`
+- เมื่อ `RecurringTask` ถูก transition เป็น `COMPLETED` — `TaskService._spawn_next_occurrence()` จะสร้าง Occurrence ใหม่โดยอัตโนมัติ: `next_occurrence` คำนวณผ่าน `RecurrenceStrategyFactory`; หาก `next_occurrence > end_recurrence_date` จะไม่ spawn (end-of-series)
+- Dependency system: association table `task_dependencies` (blocker_id → blocked_id); `Task.blockers` relationship; `TaskService.add_dependency()` ทำ DFS cycle check ก่อน (`DependencyCycleError`→400); `transition_task` to `COMPLETED` ตรวจว่า blocker ทุกตัวมี status `completed` (`TaskBlockedError`→422); `Task.blocker_ids` property expose ใน `TaskResponse`
+- Tag system: `Tag` model + `task_tags` join table + `Task.tags` relationship; `TagRepository.upsert(name)` (case-insensitive, stripped); `TaskService` รับ `tags: list[str]` ใน create/update; `GET /tasks/` รองรับ `?status=` และ `?tag=` filter; `Task.tag_names` property expose ใน `TaskResponse`; router แยก `app/routers/tags.py`
 
 ## Agent skills
 

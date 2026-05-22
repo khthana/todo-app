@@ -10,6 +10,7 @@ class StandardTaskCreate(BaseModel):
     type: Literal["standard"] = "standard"
     title: str
     description: str = ""
+    tags: list[str] = []
 
 
 class DeadlineTaskCreate(BaseModel):
@@ -18,6 +19,7 @@ class DeadlineTaskCreate(BaseModel):
     description: str = ""
     due_date: datetime
     reminder_time: datetime | None = None
+    tags: list[str] = []
 
 
 class RecurringTaskCreate(BaseModel):
@@ -27,6 +29,7 @@ class RecurringTaskCreate(BaseModel):
     recurrence_pattern: str
     next_occurrence: datetime
     end_recurrence_date: datetime | None = None
+    tags: list[str] = []
 
 
 TaskCreate = Annotated[Union[StandardTaskCreate, DeadlineTaskCreate, RecurringTaskCreate], Field(discriminator="type")]
@@ -42,10 +45,22 @@ class TaskUpdate(BaseModel):
     description: str | None = None
     due_date: datetime | None = None
     reminder_time: datetime | None = None
+    tags: list[str] | None = None
 
 
 class TaskTransitionRequest(BaseModel):
     to_status: str
+
+
+class DependencyRequest(BaseModel):
+    blocker_id: int
+
+
+class TagResponse(BaseModel):
+    id: int
+    name: str
+
+    model_config = {"from_attributes": True}
 
 
 class TaskResponse(BaseModel):
@@ -60,6 +75,8 @@ class TaskResponse(BaseModel):
     recurrence_pattern: str | None = None
     next_occurrence: datetime | None = None
     end_recurrence_date: datetime | None = None
+    blocker_ids: list[int] = []
+    tag_names: list[str] = []
     created_at: datetime
     updated_at: datetime
 
