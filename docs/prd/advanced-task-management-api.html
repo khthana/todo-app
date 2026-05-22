@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRD: Advanced Task Management API</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #1a1a2e;
+      background: #f5f6fa;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    nav {
+      width: 240px;
+      flex-shrink: 0;
+      background: #1a1a2e;
+      color: #c8c8d8;
+      padding: 32px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    nav .logo {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #7c6af7;
+      padding: 0 24px 24px;
+      border-bottom: 1px solid #2a2a45;
+    }
+
+    nav ul {
+      list-style: none;
+      padding: 16px 0;
+    }
+
+    nav ul li a {
+      display: block;
+      padding: 7px 24px;
+      color: #8888aa;
+      text-decoration: none;
+      font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: all .15s;
+    }
+
+    nav ul li a:hover,
+    nav ul li a.active {
+      color: #e0e0f0;
+      border-left-color: #7c6af7;
+      background: rgba(124,106,247,.08);
+    }
+
+    /* Main */
+    main {
+      flex: 1;
+      padding: 48px 60px;
+      max-width: 900px;
+    }
+
+    /* Header */
+    .prd-header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid #e0e0ea;
+    }
+
+    .prd-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a2e;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+
+    .prd-header .meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .badge-agent { background: #e8f5e9; color: #2e7d32; }
+    .badge-issue { background: #ede7f6; color: #4527a0; text-decoration: none; }
+    .badge-issue:hover { background: #d1c4e9; }
+
+    /* Sections */
+    section {
+      margin-bottom: 44px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #ececf5;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2 .icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #ede7f6;
+      color: #7c6af7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #4a4a6a;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin: 24px 0 10px;
+    }
+
+    p { margin-bottom: 12px; color: #3a3a5c; }
+
+    /* User stories */
+    .stories-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .story {
+      display: flex;
+      gap: 12px;
+      background: #fff;
+      border: 1px solid #e8e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      align-items: flex-start;
+    }
+
+    .story-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: #7c6af7;
+      background: #ede7f6;
+      border-radius: 6px;
+      padding: 2px 7px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .story-text { font-size: 14px; color: #3a3a5c; line-height: 1.6; }
+    .story-text strong { color: #1a1a2e; }
+
+    /* Decision cards */
+    .decision-card {
+      background: #fff;
+      border: 1px solid #e8e8f0;
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 12px;
+    }
+
+    .decision-card h3 { margin-top: 0; }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #e8e8f0;
+    }
+
+    thead { background: #f0effe; }
+    thead th { padding: 10px 16px; text-align: left; font-size: 12px; font-weight: 700; color: #5c5c8a; text-transform: uppercase; letter-spacing: .05em; }
+    tbody tr { border-top: 1px solid #f0f0f8; }
+    tbody tr:hover { background: #fafaff; }
+    td { padding: 10px 16px; color: #3a3a5c; }
+    td:first-child { font-weight: 600; color: #7c6af7; }
+    td code { background: #f0effe; color: #4527a0; padding: 1px 6px; border-radius: 4px; font-size: 12.5px; }
+
+    /* Bullet lists */
+    ul.bullets { padding-left: 0; list-style: none; }
+    ul.bullets li {
+      padding: 6px 0 6px 20px;
+      color: #3a3a5c;
+      font-size: 14px;
+      border-bottom: 1px solid #f4f4f8;
+      position: relative;
+    }
+    ul.bullets li::before {
+      content: "›";
+      position: absolute;
+      left: 2px;
+      color: #7c6af7;
+      font-weight: 700;
+    }
+    ul.bullets li:last-child { border-bottom: none; }
+    ul.bullets li strong { color: #1a1a2e; }
+
+    /* Test blocks */
+    .test-block {
+      background: #fff;
+      border-left: 4px solid #7c6af7;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+
+    .test-block h3 { margin-top: 0; color: #7c6af7; }
+
+    /* Out of scope */
+    .oos-list { list-style: none; padding: 0; }
+    .oos-list li {
+      padding: 8px 0 8px 28px;
+      color: #6a6a8a;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f8;
+      position: relative;
+    }
+    .oos-list li::before {
+      content: "✕";
+      position: absolute;
+      left: 4px;
+      color: #c0c0d8;
+      font-size: 12px;
+    }
+    .oos-list li:last-child { border-bottom: none; }
+
+    /* Notes */
+    .note {
+      background: #fffbf0;
+      border: 1px solid #ffe0b2;
+      border-left: 4px solid #ff9800;
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #4a3a1a;
+    }
+
+    code {
+      background: #f0effe;
+      color: #4527a0;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    a { color: #7c6af7; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <nav>
+    <div class="logo">PRD Document</div>
+    <ul>
+      <li><a href="#problem">Problem Statement</a></li>
+      <li><a href="#solution">Solution</a></li>
+      <li><a href="#stories">User Stories</a></li>
+      <li><a href="#implementation">Implementation Decisions</a></li>
+      <li><a href="#testing">Testing Decisions</a></li>
+      <li><a href="#oos">Out of Scope</a></li>
+      <li><a href="#notes">Further Notes</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <div class="prd-header">
+      <h1>Advanced Task Management API<br>Full Rebuild</h1>
+      <div class="meta">
+        <span class="badge badge-agent">&#10003; ready-for-agent</span>
+        <a class="badge badge-issue" href="https://github.com/khthana/todo-app/issues/1" target="_blank">&#128279; GitHub Issue #1</a>
+      </div>
+    </div>
+
+    <!-- Problem Statement -->
+    <section id="problem">
+      <h2><span class="icon">!</span> Problem Statement</h2>
+      <p>The current API is a minimal Todo CRUD system with a flat <code>todos</code> table and a single <code>completed</code> boolean. It cannot represent the real complexity users face when managing work: tasks with hard deadlines, tasks that repeat on a schedule, tasks that are blocked by other tasks, or tasks that need to be grouped and filtered.</p>
+      <p>There is no concept of lifecycle states, no safety net against completing a task whose dependencies are unfinished, and no protection against circular dependency graphs.</p>
+    </section>
+
+    <!-- Solution -->
+    <section id="solution">
+      <h2><span class="icon">&#10003;</span> Solution</h2>
+      <p>Rebuild the backend as a fully-featured Task Management API that models three distinct Task types (<code>StandardTask</code>, <code>DeadlineTask</code>, <code>RecurringTask</code>), enforces correct StateTransitions, detects and rejects Dependency cycles, automatically spawns the next Occurrence when a RecurringTask is completed, and groups Tasks via Tags.</p>
+      <p>The API exposes a clean, typed REST surface backed by a layered architecture (<strong>Router → TaskService → TaskRepository</strong>) with domain exceptions mapped to appropriate HTTP status codes.</p>
+    </section>
+
+    <!-- User Stories -->
+    <section id="stories">
+      <h2><span class="icon">&#9776;</span> User Stories</h2>
+      <div class="stories-grid">
+        <div class="story"><span class="story-num">1</span><span class="story-text">As an API consumer, I want to <strong>create a StandardTask</strong> with a title and description, so that I can track work that has no deadline.</span></div>
+        <div class="story"><span class="story-num">2</span><span class="story-text">As an API consumer, I want to <strong>create a DeadlineTask</strong> with a <code>due_date</code>, so that I can track work that must be finished before a specific datetime.</span></div>
+        <div class="story"><span class="story-num">3</span><span class="story-text">As an API consumer, I want to <strong>create a RecurringTask</strong> with a <code>recurrence_pattern</code> (DAILY, WEEKLY, MONTHLY) and an optional <code>end_recurrence_date</code>, so that repeating work is automatically rescheduled.</span></div>
+        <div class="story"><span class="story-num">4</span><span class="story-text">As an API consumer, I want to <strong>retrieve a Task by ID</strong> and receive type-specific fields, so that clients can render the correct UI for each type.</span></div>
+        <div class="story"><span class="story-num">5</span><span class="story-text">As an API consumer, I want to <strong>list all Tasks</strong>, so that I can display an overview of the work queue.</span></div>
+        <div class="story"><span class="story-num">6</span><span class="story-text">As an API consumer, I want to <strong>filter Tasks</strong> by <code>status</code> and by <code>tag</code>, so that I can focus on relevant subsets.</span></div>
+        <div class="story"><span class="story-num">7</span><span class="story-text">As an API consumer, I want to <strong>update a Task's title or description</strong>, so that I can correct mistakes or add detail.</span></div>
+        <div class="story"><span class="story-num">8</span><span class="story-text">As an API consumer, I want to <strong>delete a Task</strong>, so that irrelevant tasks can be removed.</span></div>
+        <div class="story"><span class="story-num">9</span><span class="story-text">As an API consumer, I want to <strong>transition a Task from PENDING to IN_PROGRESS</strong>, so that I can communicate that work has started.</span></div>
+        <div class="story"><span class="story-num">10</span><span class="story-text">As an API consumer, I want to <strong>transition a Task from IN_PROGRESS to COMPLETED</strong>, so that I can record that work is done.</span></div>
+        <div class="story"><span class="story-num">11</span><span class="story-text">As an API consumer, I want to <strong>transition a Task to CANCELLED</strong>, so that I can remove it from active tracking without losing audit history.</span></div>
+        <div class="story"><span class="story-num">12</span><span class="story-text">As an API consumer, I want the API to <strong>reject invalid StateTransitions</strong> (e.g., COMPLETED to anything), so that task lifecycle integrity is preserved.</span></div>
+        <div class="story"><span class="story-num">13</span><span class="story-text">As an API consumer, I want the API to <strong>prevent completing a Task with unfinished Dependencies</strong>, so that prerequisite work is not skipped.</span></div>
+        <div class="story"><span class="story-num">14</span><span class="story-text">As an API consumer, I want to <strong>add a Dependency</strong> relationship between two Tasks, so that execution order is enforced.</span></div>
+        <div class="story"><span class="story-num">15</span><span class="story-text">As an API consumer, I want the API to <strong>reject cyclic Dependencies</strong>, so that the dependency graph stays acyclic.</span></div>
+        <div class="story"><span class="story-num">16</span><span class="story-text">As an API consumer, I want to <strong>remove a Dependency</strong> between two Tasks, so that I can update the work plan when prerequisites change.</span></div>
+        <div class="story"><span class="story-num">17</span><span class="story-text">As an API consumer, I want to see <strong>which Tasks are blocking a given Task</strong>, so that I understand what must be done first.</span></div>
+        <div class="story"><span class="story-num">18</span><span class="story-text">As an API consumer, I want <strong>completing a RecurringTask to automatically create the next Occurrence</strong>, so that I never have to manually recreate repeating work.</span></div>
+        <div class="story"><span class="story-num">19</span><span class="story-text">As an API consumer, I want the <strong>next Occurrence to inherit title, description, recurrence pattern, and tags</strong>, so that repeated tasks are consistent.</span></div>
+        <div class="story"><span class="story-num">20</span><span class="story-text">As an API consumer, I want the <strong>next Occurrence to start with empty Dependencies</strong>, so that each Occurrence is independently completable.</span></div>
+        <div class="story"><span class="story-num">21</span><span class="story-text">As an API consumer, I want <strong>no new Occurrence to spawn past end_recurrence_date</strong>, so that finite series terminate automatically.</span></div>
+        <div class="story"><span class="story-num">22</span><span class="story-text">As an API consumer, I want to <strong>query whether a DeadlineTask is overdue</strong>, so that I can surface past-due items to the user.</span></div>
+        <div class="story"><span class="story-num">23</span><span class="story-text">As an API consumer, I want to <strong>extend the due_date</strong> on a DeadlineTask, so that I can accommodate scope changes without recreating the task.</span></div>
+        <div class="story"><span class="story-num">24</span><span class="story-text">As an API consumer, I want to <strong>attach Tags to a Task</strong> when creating or updating it, so that I can categorize work.</span></div>
+        <div class="story"><span class="story-num">25</span><span class="story-text">As an API consumer, I want <strong>Tags to be auto-created by name</strong> if they do not already exist, so that I do not need a separate tag-creation step.</span></div>
+        <div class="story"><span class="story-num">26</span><span class="story-text">As an API consumer, I want to <strong>list all Tags</strong> in the system, so that I can offer a tag picker in a client UI.</span></div>
+        <div class="story"><span class="story-num">27</span><span class="story-text">As an API consumer, I want <strong>renaming a Tag to immediately apply to every Task</strong> using that Tag, so that categorization stays consistent.</span></div>
+        <div class="story"><span class="story-num">28</span><span class="story-text">As an API consumer, I want to receive a <strong>404 Not Found</strong> when I request a Task or Tag that does not exist.</span></div>
+        <div class="story"><span class="story-num">29</span><span class="story-text">As an API consumer, I want to receive a <strong>400 Bad Request</strong> when I attempt to create a cyclic Dependency.</span></div>
+        <div class="story"><span class="story-num">30</span><span class="story-text">As an API consumer, I want to receive a <strong>422 Unprocessable Entity</strong> when I attempt to complete a blocked Task.</span></div>
+        <div class="story"><span class="story-num">31</span><span class="story-text">As an API consumer, I want to receive a <strong>400 Bad Request</strong> when I supply an invalid RecurrencePattern.</span></div>
+        <div class="story"><span class="story-num">32</span><span class="story-text">As an API consumer, I want <strong>internal errors to return a safe 500</strong> response without stack traces.</span></div>
+        <div class="story"><span class="story-num">33</span><span class="story-text">As an API consumer, I want <strong>interactive API documentation at /docs</strong>, so that I can explore endpoints without reading source code.</span></div>
+      </div>
+    </section>
+
+    <!-- Implementation Decisions -->
+    <section id="implementation">
+      <h2><span class="icon">&#9881;</span> Implementation Decisions</h2>
+
+      <div class="decision-card">
+        <h3>Architecture</h3>
+        <p>Four-layer architecture: <strong>Routers</strong> (HTTP boundary) → <strong>TaskService</strong> (business logic) → <strong>TaskRepository / TagRepository</strong> (data access) → <strong>SQLAlchemy Models</strong> (persistence). Routers know nothing about database sessions; TaskService knows nothing about HTTP.</p>
+        <p>Domain exceptions (<code>DomainException</code>, <code>TaskNotFoundError</code>, <code>DependencyCycleError</code>, <code>TaskBlockedError</code>, <code>InvalidRecurrencePatternError</code>) are raised by TaskService and caught by FastAPI exception handlers in the Router layer.</p>
+      </div>
+
+      <div class="decision-card">
+        <h3>Database Schema — Single Table Inheritance (ADR-0001)</h3>
+        <p>A single <code>tasks</code> table holds all Task types with a <code>type</code> discriminator column (<code>standard</code>, <code>deadline</code>, <code>recurring</code>). Type-specific columns are NULL for inapplicable types. An association table <code>task_dependencies</code> (blocker_id, blocked_id) stores Dependency relationships. A <code>tags</code> table and <code>task_tags</code> join table implement the many-to-many Tag relationship.</p>
+      </div>
+
+      <div class="decision-card">
+        <h3>Task Hierarchy</h3>
+        <ul class="bullets">
+          <li><code>Task</code> is the SQLAlchemy polymorphic base using STI (<code>polymorphic_on=type</code>)</li>
+          <li><code>StandardTask</code>, <code>DeadlineTask</code>, <code>RecurringTask</code> are mapped subclasses</li>
+          <li><strong>TaskStatus</strong>: <code>PENDING</code> → <code>IN_PROGRESS</code> → <code>COMPLETED</code> / <code>CANCELLED</code></li>
+          <li><strong>RecurrencePattern</strong>: <code>DAILY</code>, <code>WEEKLY</code>, <code>MONTHLY</code></li>
+        </ul>
+      </div>
+
+      <div class="decision-card">
+        <h3>TaskService — Key Behaviors</h3>
+        <ul class="bullets">
+          <li><strong>StateTransition</strong>: validate against an allowed-transitions map; terminal states may not transition further</li>
+          <li><strong>Dependency cycle detection</strong>: DFS traversal on every <code>add_dependency</code> call; reject with <code>DependencyCycleError</code> if cycle detected</li>
+          <li><strong>Completion guard</strong>: all Dependencies must be <code>COMPLETED</code>; <code>CANCELLED</code> dependencies still block</li>
+          <li><strong>Occurrence spawning</strong>: on RecurringTask completion, calculate next via RecurrenceStrategy, copy title/description/pattern/tags but not dependencies; stop if past <code>end_recurrence_date</code></li>
+        </ul>
+      </div>
+
+      <div class="decision-card">
+        <h3>RecurrenceStrategy — Strategy Pattern</h3>
+        <p>A <code>RecurrenceStrategy</code> protocol defines <code>calculate_next(current: datetime) -> datetime</code>. Concrete implementations: <code>DailyStrategy</code> (+1 day), <code>WeeklyStrategy</code> (+7 days), <code>MonthlyStrategy</code> (+1 calendar month). A <code>RecurrenceStrategyFactory</code> maps enum values to strategy instances.</p>
+      </div>
+
+      <div class="decision-card">
+        <h3>Overdue</h3>
+        <p><code>DeadlineTask.is_overdue()</code> is a read-only property comparing <code>due_date</code> to <code>datetime.utcnow()</code>. Included in <code>DeadlineTaskResponse</code>. Being overdue does <strong>not</strong> block StateTransitions.</p>
+      </div>
+
+      <div class="decision-card">
+        <h3>Tag Management</h3>
+        <p>Tags are identified by name (case-insensitive, stripped). TagRepository upserts by name. Tags are passed as a list of name strings in Create/Update payloads — no standalone POST/DELETE tag endpoints. Only <code>GET /tags/</code> to list all tags.</p>
+      </div>
+
+      <div class="decision-card">
+        <h3>API Surface</h3>
+        <table>
+          <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>GET</td><td><code>/</code></td><td>Health check</td></tr>
+            <tr><td>POST</td><td><code>/tasks/</code></td><td>Create a task (type-discriminated body)</td></tr>
+            <tr><td>GET</td><td><code>/tasks/</code></td><td>List tasks (filter: <code>status</code>, <code>tag</code>)</td></tr>
+            <tr><td>GET</td><td><code>/tasks/{id}</code></td><td>Get a task by ID</td></tr>
+            <tr><td>PATCH</td><td><code>/tasks/{id}</code></td><td>Update title, description, type-specific fields, tags</td></tr>
+            <tr><td>DELETE</td><td><code>/tasks/{id}</code></td><td>Delete a task</td></tr>
+            <tr><td>POST</td><td><code>/tasks/{id}/transition</code></td><td>Trigger a StateTransition</td></tr>
+            <tr><td>POST</td><td><code>/tasks/{id}/dependencies</code></td><td>Add a Dependency</td></tr>
+            <tr><td>DELETE</td><td><code>/tasks/{id}/dependencies/{blocker_id}</code></td><td>Remove a Dependency</td></tr>
+            <tr><td>GET</td><td><code>/tags/</code></td><td>List all tags</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="decision-card">
+        <h3>Schemas</h3>
+        <ul class="bullets">
+          <li>Discriminated union on <code>type</code> field for Create and Response schemas</li>
+          <li><code>TaskResponse</code> includes <code>is_overdue</code> boolean for DeadlineTask responses</li>
+          <li><code>TaskResponse</code> includes full list of Tag names and dependency IDs</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Testing Decisions -->
+    <section id="testing">
+      <h2><span class="icon">&#10003;</span> Testing Decisions</h2>
+      <p>Good tests verify <strong>external behavior</strong> — what the module does given inputs and preconditions — not implementation internals. Tests must not assert on private methods, SQL queries, or ORM internals.</p>
+
+      <div class="test-block">
+        <h3>TaskService — unit tests with in-memory SQLite</h3>
+        <ul class="bullets">
+          <li>Valid and invalid StateTransitions for each status</li>
+          <li>Completing a Task whose Dependencies are all <code>COMPLETED</code> succeeds</li>
+          <li>Completing a Task with any non-<code>COMPLETED</code> Dependency raises <code>TaskBlockedError</code></li>
+          <li>Adding a non-cyclic Dependency succeeds</li>
+          <li>Adding a Dependency that creates a cycle raises <code>DependencyCycleError</code></li>
+          <li>Completing a RecurringTask spawns a new Occurrence with the correct <code>next_occurrence</code></li>
+          <li>Completing a RecurringTask past <code>end_recurrence_date</code> does not spawn a new Occurrence</li>
+        </ul>
+      </div>
+
+      <div class="test-block">
+        <h3>RecurrenceStrategy — pure unit tests</h3>
+        <ul class="bullets">
+          <li><code>DailyStrategy</code> advances by exactly one day</li>
+          <li><code>WeeklyStrategy</code> advances by exactly seven days</li>
+          <li><code>MonthlyStrategy</code> advances by exactly one calendar month (including edge cases: Jan 31 → Feb 28/29)</li>
+        </ul>
+      </div>
+
+      <div class="test-block">
+        <h3>TaskRepository — integration tests with in-memory SQLite</h3>
+        <ul class="bullets">
+          <li>Create/read/update/delete Tasks of all three types</li>
+          <li>Tag upsert returns existing Tag on second call with same name</li>
+          <li>Querying Tasks by status and by Tag name returns correct subsets</li>
+          <li>Dependency rows are persisted and retrieved correctly</li>
+        </ul>
+      </div>
+
+      <div class="test-block">
+        <h3>API Routers — end-to-end with FastAPI TestClient</h3>
+        <ul class="bullets">
+          <li>Each endpoint returns the correct HTTP status and response shape for the happy path</li>
+          <li><code>TaskNotFoundError</code> → 404, <code>DependencyCycleError</code> → 400, <code>TaskBlockedError</code> → 422, <code>InvalidRecurrencePatternError</code> → 400</li>
+          <li>Creating a RecurringTask and POSTing a COMPLETED transition spawns an Occurrence retrievable via <code>GET /tasks/</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Out of Scope -->
+    <section id="oos">
+      <h2><span class="icon">&#8416;</span> Out of Scope</h2>
+      <ul class="oos-list">
+        <li>Authentication and authorization — all endpoints are unauthenticated</li>
+        <li>Reminder delivery (email, push notification) — <code>reminder_time</code> is stored but no dispatch mechanism is implemented</li>
+        <li>Pagination on list endpoints</li>
+        <li>Cron expression support for RecurrencePattern (only DAILY, WEEKLY, MONTHLY)</li>
+        <li>Soft-delete or task archival — CANCELLED tasks remain in the database as audit trail; DELETE physically removes</li>
+        <li>Frontend / client application</li>
+        <li>Data migration from the existing <code>todos</code> table — the table will be dropped and replaced</li>
+      </ul>
+    </section>
+
+    <!-- Further Notes -->
+    <section id="notes">
+      <h2><span class="icon">&#9998;</span> Further Notes</h2>
+      <div class="note">The <code>todos</code> table and all existing schemas will be removed as part of this rebuild. The <code>Todo</code> model, <code>TodoCreate</code>/<code>TodoUpdate</code>/<code>TodoResponse</code> schemas, and the <code>/todos/</code> router are all superseded.</div>
+      <div class="note">The domain glossary in <code>CONTEXT.md</code> defines canonical names (e.g., <strong>Occurrence</strong>, <strong>Dependency</strong>, <strong>TagManagement</strong>) — all implementation naming must match.</div>
+      <div class="note">ADR-0001 confirms the STI decision; no new ADR is needed for the approach described here.</div>
+      <div class="note">Python typing should be strict throughout (<code>from __future__ import annotations</code>, full type hints) to leverage FastAPI's automatic schema generation.</div>
+    </section>
+
+  </main>
+</div>
+</body>
+</html>
